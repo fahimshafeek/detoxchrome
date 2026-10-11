@@ -26,6 +26,7 @@ finetunedmodel/
 ├── pipeline.py             # End-to-end training, ONNX export, INT8 quantization & benchmark script
 ├── All_MiniLM_L6_v2.ipynb  # Jupyter notebook equivalent
 ├── requirements.txt        # Frozen dependencies
+├── decrease_ai/            # AI reduction package with HTML UI test & ONNX model
 ├── export_for_chromium/    # Production-ready package for Chromium Android integration
 │   ├── model_quantized.onnx  # 22 MB INT8 quantized ONNX model
 │   ├── tokenizer.json        # Fast tokenizer definition

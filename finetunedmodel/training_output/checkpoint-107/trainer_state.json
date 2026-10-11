@@ -11,9 +11,9 @@
   "log_history": [
     {
       "epoch": 1.0,
-      "grad_norm": 0.23377634584903717,
+      "grad_norm": 0.21600529551506042,
       "learning_rate": 2.2570093457943928e-05,
-      "loss": 0.3107,
+      "loss": 0.3119,
       "step": 107
     },
     {
@@ -23,13 +23,13 @@
       "eval_false_negatives": 0,
       "eval_false_positive_rate": 0.0,
       "eval_false_positives": 0,
-      "eval_loss": 0.014957506209611893,
+      "eval_loss": 0.01718449965119362,
       "eval_precision": 1.0,
       "eval_recall": 1.0,
-      "eval_runtime": 1.7353,
-      "eval_samples_per_second": 172.881,
+      "eval_runtime": 0.1402,
+      "eval_samples_per_second": 2139.765,
       "eval_score_min_fp": 1.0,
-      "eval_steps_per_second": 10.949,
+      "eval_steps_per_second": 135.518,
       "eval_true_negatives": 150,
       "eval_true_positives": 150,
       "step": 107

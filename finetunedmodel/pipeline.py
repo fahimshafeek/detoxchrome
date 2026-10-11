@@ -205,6 +205,17 @@ def run_pipeline():
     
     output_dir = "./training_output"
     best_checkpoint_dir = "./best_checkpoint"
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    if os.path.exists(best_checkpoint_dir):
+        shutil.rmtree(best_checkpoint_dir)
+        
+    use_cuda = torch.cuda.is_available()
+    if use_cuda:
+        gpu_stats = torch.cuda.get_device_properties(0)
+        max_mem = round(gpu_stats.total_memory / 1024 / 1024 / 1024, 3)
+        print(f"\n[GPU Acceleration] Active GPU: {gpu_stats.name} | Total VRAM: {max_mem} GB")
+        
     training_args = TrainingArguments(
         output_dir=output_dir,
         num_train_epochs=4,
@@ -220,47 +231,31 @@ def run_pipeline():
         greater_is_better=True,
         seed=42,
         report_to="none",
-        use_cpu=(device == "cpu")
+        fp16=use_cuda,
+        use_cpu=not use_cuda
     )
     
-    if os.path.exists(os.path.join(best_checkpoint_dir, "model.safetensors")):
-        print(f"Found existing fine-tuned best checkpoint in '{best_checkpoint_dir}'.")
-        model = AutoModelForSequenceClassification.from_pretrained(best_checkpoint_dir)
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            eval_dataset=val_dataset,
-            processing_class=tokenizer,
-            compute_metrics=compute_metrics,
-            callbacks=[DetailedEvalCallback()]
-        )
-        print("\nEvaluating existing best checkpoint on validation set:")
-        final_eval = trainer.evaluate()
-        print(f"Validation Metrics: {json.dumps({k: round(v, 4) for k, v in final_eval.items() if isinstance(v, (int, float))}, indent=2)}")
-    else:
-        if os.path.exists(output_dir):
-            shutil.rmtree(output_dir)
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=val_dataset,
-            processing_class=tokenizer,
-            compute_metrics=compute_metrics,
-            callbacks=[DetailedEvalCallback()]
-        )
-        
-        print("\nStarting model fine-tuning (4 epochs)...")
-        train_result = trainer.train()
-        
-        print("\nFinal evaluation on validation set with best checkpoint:")
-        final_eval = trainer.evaluate()
-        print(f"Final Validation Metrics: {json.dumps({k: round(v, 4) for k, v in final_eval.items() if isinstance(v, (int, float))}, indent=2)}")
-        
-        print(f"\nSaving best checkpoint to '{best_checkpoint_dir}'...")
-        trainer.save_model(best_checkpoint_dir)
-        tokenizer.save_pretrained(best_checkpoint_dir)
-        print("Checkpoint and tokenizer saved successfully.")
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
+        processing_class=tokenizer,
+        compute_metrics=compute_metrics,
+        callbacks=[DetailedEvalCallback()]
+    )
+    
+    print("\nStarting model fine-tuning (4 epochs)...")
+    train_result = trainer.train()
+    
+    print("\nFinal evaluation on validation set with best checkpoint:")
+    final_eval = trainer.evaluate()
+    print(f"Final Validation Metrics: {json.dumps({k: round(v, 4) for k, v in final_eval.items() if isinstance(v, (int, float))}, indent=2)}")
+    
+    print(f"\nSaving best checkpoint to '{best_checkpoint_dir}'...")
+    trainer.save_model(best_checkpoint_dir)
+    tokenizer.save_pretrained(best_checkpoint_dir)
+    print("Checkpoint and tokenizer saved successfully.")
     
     # -------------------------------------------------------------------------
     # STEP 3: Quantize and Export to ONNX

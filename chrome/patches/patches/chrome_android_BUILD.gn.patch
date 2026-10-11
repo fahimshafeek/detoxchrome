@@ -1,0 +1,30 @@
+diff --git a/chrome/android/BUILD.gn b/chrome/android/BUILD.gn
+index 4d58c64c73..4134c0da58 100644
+--- a/chrome/android/BUILD.gn
++++ b/chrome/android/BUILD.gn
+@@ -1794,8 +1794,25 @@ if (_is_default_toolchain) {
+     deps = [ ":version_xml" ]
+   }
+ 
++  android_assets("minilm_model_assets") {
++    sources = [
++      "model_assets/model_quantized.onnx",
++      "model_assets/tokenizer.json",
++      "model_assets/vocab.txt",
++      "model_assets/features/claude_chat.html",
++      "model_assets/features/vocab.json",
++      "model_assets/features/vendor/ort.all.min.js",
++      "model_assets/features/vendor/wasm/ort-wasm-simd-threaded.wasm",
++      "model_assets/features/vendor/wasm/ort-wasm-simd-threaded.mjs",
++      "model_assets/features/vendor/wasm/ort-wasm-simd-threaded.jsep.wasm",
++      "model_assets/features/vendor/wasm/ort-wasm-simd-threaded.jsep.mjs",
++    ]
++    disable_compression = true
++  }
++
+   java_group("chrome_public_non_pak_assets") {
+     deps = [
++      ":minilm_model_assets",
+       "//chrome/android/webapk/libs/runtime_library:runtime_library_assets",
+       "//components/privacy_sandbox/privacy_sandbox_attestations/preload:privacy_sandbox_attestations_assets",
+     ]
