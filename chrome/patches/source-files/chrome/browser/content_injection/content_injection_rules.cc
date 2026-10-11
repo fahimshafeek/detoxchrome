@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "base/no_destructor.h"
+#include "chrome/browser/content_injection/platforms/claude_rules.h"
 #include "chrome/browser/content_injection/platforms/facebook_rules.h"
 #include "chrome/browser/content_injection/platforms/instagram_rules.h"
 #include "chrome/browser/content_injection/platforms/linkedin_rules.h"
@@ -43,6 +44,7 @@ base::span<const InjectionRule> GetInjectionRules() {
   static const base::NoDestructor<std::vector<InjectionRule>> kRules([] {
     std::vector<InjectionRule> rules;
     // ── Add platforms in alphabetical order ──────────────────────────────────
+    Append(rules, GetClaudeInjectionRules());
     Append(rules, GetFacebookInjectionRules());
     Append(rules, GetInstagramInjectionRules());
     Append(rules, GetLinkedInInjectionRules());
