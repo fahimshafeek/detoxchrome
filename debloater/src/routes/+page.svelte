@@ -213,6 +213,26 @@
     }, {} as Record<string, number>)
   );
 
+  let activeFilteredApps = $derived(filteredApps.filter(a => a.enabled));
+  let allSelected = $derived(activeFilteredApps.length > 0 && activeFilteredApps.every(a => a.selected));
+  let someSelected = $derived(activeFilteredApps.some(a => a.selected));
+
+  function selectAll() {
+    for (const app of filteredApps) {
+      if (app.enabled) {
+        app.selected = true;
+      }
+    }
+  }
+
+  function deselectAll() {
+    for (const app of filteredApps) {
+      if (app.enabled) {
+        app.selected = false;
+      }
+    }
+  }
+
   onMount(() => {
     checkConnectedDevice();
     const interval = setInterval(() => {
@@ -325,6 +345,35 @@
           </Button>
         </div>
       {:else}
+        <!-- Selection toolbar -->
+        <div class="flex items-center justify-between w-full mb-3 px-1">
+          <span class="text-xs text-muted-foreground">
+            {activeFilteredApps.filter(a => a.selected).length} of {activeFilteredApps.length} active apps selected
+          </span>
+          <div class="flex items-center space-x-2">
+            {#if someSelected}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                class="h-7 text-xs text-muted-foreground hover:text-foreground cursor-pointer px-2"
+                onclick={deselectAll}
+              >
+                Deselect All
+              </Button>
+            {/if}
+            {#if !allSelected}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                class="h-7 text-xs text-muted-foreground hover:text-foreground cursor-pointer px-2"
+                onclick={selectAll}
+              >
+                Select All
+              </Button>
+            {/if}
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {#each filteredApps as app (app.id)}
             <Card class="flex items-start justify-between p-5 hover:bg-muted/50 transition-colors">
