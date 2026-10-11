@@ -1,0 +1,20 @@
+diff --git a/chrome/browser/chrome_content_browser_client_navigation_throttles.cc b/chrome/browser/chrome_content_browser_client_navigation_throttles.cc
+index 0000000000..0000000000 100644
+--- a/chrome/browser/chrome_content_browser_client_navigation_throttles.cc
++++ b/chrome/browser/chrome_content_browser_client_navigation_throttles.cc
+@@ -17,6 +17,7 @@
+ #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+ #include "chrome/browser/data_sharing/data_sharing_navigation_throttle.h"
+ #include "chrome/browser/enterprise/data_protection/view_source_navigation_throttle.h"
++#include "chrome/browser/navigation_policy/shorts_reels_blocker.h"
+ #include "chrome/browser/first_party_sets/first_party_sets_navigation_throttle.h"
+ #include "chrome/browser/glic/glic_navigation_throttle.h"
+ #include "chrome/browser/history/history_service_factory.h"
+@@ -291,6 +292,7 @@ void CreateAndAddChromeThrottlesForNavigation(
+     // should be cared by adding an attribute flag to
+     // NavigationThrottleRegistry::AddThrottle().
+     page_load_metrics::MetricsNavigationThrottle::CreateAndAdd(registry);
++    distraction_blocker::RegisterThrottlesAndHelpers(registry, handle);
+ 
+     // Appends the X-Geo header to the navigation request if needed.
+     if (auto throttle =

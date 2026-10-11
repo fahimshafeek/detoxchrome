@@ -1,0 +1,32 @@
+# Project Progress
+
+## 2026-05-31
+- Explored codebase structure and identified the main components.
+- Reviewed `README.md` and `INTEGRATION.md` for understanding the Distraction Blocker Chromium fork.
+- Analyzed `apply-patches.py` which copies files from `source-files/` to a Chromium checkout and performs surgical code modifications to integrate the distraction-free features.
+- Confirmed that this repository is a patch set structured to be copied directly into and modify an external Chromium `src/` checkout directory via `apply-patches.py`.
+- Conducted maintenance analysis of this patch-set method vs. git branching/rebasing for tracking Chromium updates.
+- Analyzed hardware resource constraints (ThinkCentre M710q, 16GB RAM, 240GB storage) and formulated optimization recommendations for compiling Chromium.
+- Pulled latest updates including the `build-config/` directory containing a Dockerfile, docker-compose.yml, a Makefile, and args.gn optimized for 16GB RAM and 53GB swap.
+- Evaluated the necessity of migrating python-based patch scripts to git patch files and advised the user.
+- Formulated a production release workflow strategy for weekly Chromium updates (Git tracking branch, CI/CD building, cloud builds vs. M710q).
+- Analyzed and documented long-term maintenance strategies for solo developers with limited weekly hours (Stable Channel tracking, hook isolation, and automated CI/CD).
+- Analyzed `build-config/.gclient` configuration to confirm we are tracking Chromium's main branch, and quantified all 23 C++ / Java codebase integration hooks and files.
+- Documented actionable solutions for Category A (verbatim file overwriting) and Category B (surgical file patching) to minimize maintenance friction.
+- Evaluated methods to minimize modifications (shifting NTP/Settings modifications from core edits to isolated CSS/JS injections).
+- Created `generate-patches.py` and updated `apply-patches.py` to automate the transition of Category A (NTP/Settings overrides) and Category B (integrations) into standard `.patch` files.
+- Re-categorized and logged Category A, B, and C integration risks to track current codebase state during the git-patch transition.
+- Defined and logged the new low-risk Category structure (Category A eliminated) after git patch generation is applied.
+- Committed and pushed all git patch workflow improvements (generate-patches.py, updated apply-patches.py, and progress.md) to GitHub.
+- Evaluated and validated the detailed risk breakdown, compile ETAs, and monthly maintenance hours estimate (2-3 hours/month) for a commercial Chromium fork.
+- Analyzed the product architecture, user feedback loops, and business monetization potential as a premium distraction-blocking Android web browser.
+- Evaluated Google Play Store compliance guidelines for custom Chromium forks and mapped out publishing requirements.
+- Analyzed and formulated a tiered subscription model (Monthly, Annual, and Lifetime Lifetime/One-time purchase) optimized for user conversion and recurring revenue.
+- Evaluated and validated the paid-upfront monetization model ($6.99–$9.99 one-time) focusing on engineering simplicity, direct cash flow, and Play Store commission tiers.
+- Finalized launch pricing strategy: Single "One-Time Purchase" tier, starting at $6.99 (early adopter pricing) and stepping up to $9.99 after achieving 50+ user reviews.
+- Formulated competitive positioning strategy, identifying the "Software-based Dumbphone" and "Deliberate Friction" target personas to address the native app bypass problem.
+- Analyzed a WebUSB/WebADB-based web utility funnel to democratize ADB system app removal (reducing technical barriers and driving browser adoption from 10 to 10k+ users).
+- Aligned on the final WebADB companion web utility funnel to support the "One-Time Purchase" ($6.99 -> $9.99) browser launch.
+- Evaluated UAD (Universal Android Debloater) integration roadmap: determined that utilizing UAD via step-by-step guides is ideal for launch (saving development overhead), while custom WebADB remains a future convenience upgrade.
+- Formulated a "Crowdsourced Telemetry" strategy for tracking target platform DOM/UI changes, bypassing bot detection by leveraging real-user client sessions to report broken CSS selectors.
+- Pivoted DOM change monitoring to a 100% local, privacy-compliant automation workflow (using desktop automation to capture and diff page sources), preserving browser privacy integrity.

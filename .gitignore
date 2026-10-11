@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Large PyTorch optimizer checkpoint states (>100MB exceeds GitHub push limits)
+*.pt
+
+# Chromium build artifacts & caches
+chrome/depot_tools/
+chrome/checkout/
+chrome/build-logs/
+chrome/out/
+*.apk

@@ -1,0 +1,21 @@
+diff --git a/chrome/browser/ui/android/signin/java/src/org/chromium/chrome/browser/ui/signin/signin_promo/SigninPromoMediator.java b/chrome/browser/ui/android/signin/java/src/org/chromium/chrome/browser/ui/signin/signin_promo/SigninPromoMediator.java
+index 0000000000..0000000000 100644
+--- a/chrome/browser/ui/android/signin/java/src/org/chromium/chrome/browser/ui/signin/signin_promo/SigninPromoMediator.java
++++ b/chrome/browser/ui/android/signin/java/src/org/chromium/chrome/browser/ui/signin/signin_promo/SigninPromoMediator.java
+@@ -150,16 +150,8 @@ final class SigninPromoMediator
+         mWasImpressionRecorded = true;
+     }
+ 
+     boolean canShowPromo() {
+-        if (!mAccountManagerFacade.getAccounts().isFulfilled()
+-                || !mAccountManagerFacade.didAccountFetchSucceed()) {
+-            // If accounts are not available in AccountManagerFacade yet, then don't shown the
+-            // promo.
+-            return false;
+-        }
+-
+-        return !mMaxImpressionReached && mPromoDelegate.canShowPromo();
++        return false;
+     }
+ 
+     void onSigninUndone() {
