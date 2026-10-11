@@ -136,29 +136,41 @@ def toggle_app(package_id, enable):
 
 def find_apk_path():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    candidates = [
-        os.path.join(script_dir, "apk", "ChromePublic.apk"),
-        os.path.join(script_dir, "..", "apk", "ChromePublic.apk"),
-        os.path.join(script_dir, "ChromePublic.apk"),
-        os.path.join(os.getcwd(), "apk", "ChromePublic.apk"),
-        os.path.join(os.getcwd(), "ChromePublic.apk"),
-        "/home/rohith/hack2/apk/ChromePublic.apk",
-        "/home/rohith/hack2/ChromePublic.apk",
-        "/home/rohith/Desktop/apk/ChromePublic.apk",
-        "/home/rohith/Desktop/ChromePublic.apk",
-        "/home/rohith/Downloads/Telegram Desktop/ChromePublic.apk",
+    names = ["latestchrome.apk", "ChromePublic.apk"]
+    search_dirs = [
+        os.path.join(script_dir, "apk"),
+        os.path.join(script_dir, "..", "apk"),
+        script_dir,
+        os.path.join(os.getcwd(), "apk"),
+        os.getcwd(),
+        "/home/rohith/hack2/apk",
+        "/home/rohith/hack2",
+        "/home/rohith/Desktop/apk",
+        "/home/rohith/Desktop",
+        "/home/rohith/Downloads/Telegram Desktop",
     ]
-    for c in candidates:
-        norm = os.path.normpath(c)
-        if os.path.isfile(norm):
-            return norm
+    # 1. Look for known names
+    for name in names:
+        for d in search_dirs:
+            p = os.path.normpath(os.path.join(d, name))
+            if os.path.isfile(p):
+                return p
+    # 2. Fallback to any .apk found in search dirs
+    for d in search_dirs:
+        if os.path.isdir(d):
+            try:
+                for f in os.listdir(d):
+                    if f.endswith(".apk") and not f.startswith("."):
+                        return os.path.normpath(os.path.join(d, f))
+            except Exception:
+                pass
     return None
 
 def install_apk(apk_path=None):
     if not apk_path:
         apk_path = find_apk_path()
     if not apk_path:
-        return {"success": False, "error": "ChromePublic.apk not found. Please place it in apk/ folder."}
+        return {"success": False, "error": "latestchrome.apk not found. Please place it in the apk/ folder."}
 
     dev = get_device_info()
     if not dev:
