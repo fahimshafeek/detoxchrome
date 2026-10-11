@@ -1,0 +1,21 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "sidecar-access",
+  "description": "enables sidecar access",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "shell:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "backend",
+          "sidecar": true,
+          "args": true
+        }
+      ]
+    }
+  ]
+}
