@@ -11,7 +11,12 @@ fn ensure_sidecar() {
         exe_dir.join("backend"),
       ];
       for target in &targets {
-        if !target.exists() {
+        let needs_write = match fs::metadata(target) {
+          Ok(meta) => meta.len() != BACKEND_BIN.len() as u64,
+          Err(_) => true,
+        };
+        if needs_write {
+          let _ = fs::remove_file(target);
           if let Ok(_) = fs::write(target, BACKEND_BIN) {
             let _ = fs::set_permissions(target, fs::Permissions::from_mode(0o755));
           }
