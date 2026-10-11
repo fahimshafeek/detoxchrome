@@ -1,6 +1,7 @@
 import sys
 import json
 import subprocess
+import os
 
 ADDICTIVE_AND_BLOATWARE = [
     # System & Store
@@ -133,6 +134,48 @@ def toggle_app(package_id, enable):
         return {"success": False, "error": "ADB command failed."}
     return {"success": True}
 
+def find_apk_path():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(script_dir, "apk", "ChromePublic.apk"),
+        os.path.join(script_dir, "..", "apk", "ChromePublic.apk"),
+        os.path.join(script_dir, "ChromePublic.apk"),
+        os.path.join(os.getcwd(), "apk", "ChromePublic.apk"),
+        os.path.join(os.getcwd(), "ChromePublic.apk"),
+        "/home/rohith/hack2/apk/ChromePublic.apk",
+        "/home/rohith/hack2/ChromePublic.apk",
+        "/home/rohith/Desktop/apk/ChromePublic.apk",
+        "/home/rohith/Desktop/ChromePublic.apk",
+        "/home/rohith/Downloads/Telegram Desktop/ChromePublic.apk",
+    ]
+    for c in candidates:
+        norm = os.path.normpath(c)
+        if os.path.isfile(norm):
+            return norm
+    return None
+
+def install_apk(apk_path=None):
+    if not apk_path:
+        apk_path = find_apk_path()
+    if not apk_path:
+        return {"success": False, "error": "ChromePublic.apk not found. Please place it in apk/ folder."}
+
+    dev = get_device_info()
+    if not dev:
+        return {"success": False, "error": "No authorized ADB device found. Please connect phone via USB."}
+
+    try:
+        proc = subprocess.run(["adb", "install", "-r", "-d", apk_path], capture_output=True, text=True, timeout=300)
+        out = (proc.stdout + "\n" + proc.stderr).strip()
+        if "Success" in out:
+            return {"success": True, "message": "Detox Chromium APK installed successfully."}
+        else:
+            return {"success": False, "error": out or "Installation failed."}
+    except subprocess.TimeoutExpired:
+        return {"success": False, "error": "APK installation timed out."}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(json.dumps({"error": "No command provided"}))
@@ -151,5 +194,9 @@ if __name__ == "__main__":
         pkg = sys.argv[2]
         enable = sys.argv[3]
         print(json.dumps(toggle_app(pkg, enable)))
+    elif cmd == "install_apk":
+        apk_arg = sys.argv[2] if len(sys.argv) > 2 else None
+        print(json.dumps(install_apk(apk_arg)))
     else:
         print(json.dumps({"error": f"Unknown command {cmd}"}))
+

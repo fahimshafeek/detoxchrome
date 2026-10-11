@@ -14,6 +14,9 @@
   import X from '@lucide/svelte/icons/x';
   import CircleCheck from '@lucide/svelte/icons/circle-check';
   import CircleX from '@lucide/svelte/icons/circle-x';
+  import Trash from '@lucide/svelte/icons/trash';
+  import Download from '@lucide/svelte/icons/download';
+  import Zap from '@lucide/svelte/icons/zap';
   import * as AlertDialog from '$lib/components/ui/alert-dialog';
 
   interface AppItem {
@@ -29,8 +32,10 @@
   let device = $state<{serial: string, name: string, brand: string, model: string} | null>(null);
   let apps = $state<AppItem[]>([]);
   let debloating = $state(false);
+  let installingApk = $state(false);
+  let oneClickProcessing = $state(false);
   let checkingDevice = $state(false);
-  let showConfirmDialog = $state(false);
+  let confirmAction = $state<'debloat' | 'one-click' | null>(null);
   let restoringAppId = $state<string | null>(null);
 
   // Search & Categories
@@ -136,11 +141,15 @@
       toast.info("No active apps selected for debloating.");
       return;
     }
-    showConfirmDialog = true;
+    confirmAction = 'debloat';
+  }
+
+  function requestOneClickConfirmation() {
+    confirmAction = 'one-click';
   }
 
   async function executeDebloat() {
-    showConfirmDialog = false;
+    confirmAction = null;
     const selectedApps = apps.filter(a => a.selected && a.enabled);
     if (selectedApps.length === 0) return;
 
@@ -168,6 +177,68 @@
       toast.success(`Successfully debloated ${successCount} apps!`);
     } else {
       toast.warning(`Debloated ${successCount} out of ${selectedApps.length} selected apps.`);
+    }
+  }
+
+  async function executeInstallApk(): Promise<boolean> {
+    installingApk = true;
+    toast.info("Installing Detox Chromium APK onto your phone...");
+    try {
+      const command = Command.sidecar("backend", ["install_apk"]);
+      const output = await command.execute();
+      if (output.code === 0) {
+        const result = JSON.parse(output.stdout);
+        if (result.success) {
+          toast.success(result.message || "Detox Chromium APK installed successfully!");
+          await loadStatus();
+          return true;
+        } else {
+          toast.error(`APK install failed: ${result.error}`);
+          return false;
+        }
+      } else {
+        toast.error(`Install error: ${output.stderr}`);
+        return false;
+      }
+    } catch (e: any) {
+      toast.error(`Failed to install APK: ${e.message}`);
+      return false;
+    } finally {
+      installingApk = false;
+    }
+  }
+
+  async function executeOneClickDetox() {
+    confirmAction = null;
+    oneClickProcessing = true;
+
+    // 1. Debloat all active selected apps
+    const selectedApps = apps.filter(a => a.selected && a.enabled);
+    let debloatedCount = 0;
+    for (const app of selectedApps) {
+      try {
+        const command = Command.sidecar("backend", ["toggle", app.id, "0"]);
+        const output = await command.execute();
+        if (output.code === 0) {
+          const result = JSON.parse(output.stdout);
+          if (result.success) {
+            app.enabled = false;
+            app.selected = false;
+            debloatedCount++;
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2. Install Detox Chromium APK
+    toast.info(`Debloated ${debloatedCount} apps. Now installing Detox Chromium APK...`);
+    const apkSuccess = await executeInstallApk();
+
+    oneClickProcessing = false;
+    if (apkSuccess) {
+      toast.success(`Detox complete! Debloated ${debloatedCount} apps & installed Detox Chromium.`);
+    } else {
+      toast.warning(`Debloated ${debloatedCount} apps, but APK installation encountered an error.`);
     }
   }
 
@@ -277,9 +348,42 @@
       </div>
 
       {#if masterEnabled && apps.length > 0}
-        <Button disabled={debloating} onclick={requestDebloatConfirmation} size="lg" class="mt-2 shadow-sm">
-          {debloating ? 'Debloating...' : 'Debloat Selected'}
-        </Button>
+        <div class="flex flex-wrap items-center justify-center gap-3 mt-3 px-4">
+          <!-- Button 1: Debloat Selected -->
+          <Button 
+            disabled={debloating || installingApk || oneClickProcessing} 
+            onclick={requestDebloatConfirmation} 
+            size="default" 
+            variant="destructive"
+            class="shadow-sm cursor-pointer flex items-center space-x-1.5"
+          >
+            <Trash class="h-4 w-4" />
+            <span>{debloating ? 'Debloating...' : 'Debloat Selected'}</span>
+          </Button>
+
+          <!-- Button 2: Install APK Only -->
+          <Button 
+            disabled={debloating || installingApk || oneClickProcessing} 
+            onclick={executeInstallApk} 
+            size="default" 
+            variant="secondary"
+            class="shadow-sm cursor-pointer flex items-center space-x-1.5 border border-border"
+          >
+            <Download class="h-4 w-4 {installingApk ? 'animate-bounce' : ''}" />
+            <span>{installingApk ? 'Installing APK...' : 'Install Detox APK'}</span>
+          </Button>
+
+          <!-- Button 3: Debloat & Install on One Click -->
+          <Button 
+            disabled={debloating || installingApk || oneClickProcessing} 
+            onclick={requestOneClickConfirmation} 
+            size="default" 
+            class="shadow-sm cursor-pointer flex items-center space-x-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Zap class="h-4 w-4 {oneClickProcessing ? 'animate-pulse' : ''}" />
+            <span>{oneClickProcessing ? 'Detoxing Phone...' : 'Debloat & Install APK'}</span>
+          </Button>
+        </div>
       {/if}
     </div>
   </div>
@@ -425,17 +529,31 @@
   {/if}
 
   <!-- Confirmation Modal -->
-  <AlertDialog.Root bind:open={showConfirmDialog}>
+  <AlertDialog.Root open={confirmAction !== null} onOpenChange={(open) => { if (!open) confirmAction = null; }}>
     <AlertDialog.Content>
       <AlertDialog.Header>
-        <AlertDialog.Title>Confirm Debloat</AlertDialog.Title>
+        <AlertDialog.Title>
+          {confirmAction === 'one-click' ? 'Confirm One-Click Detox' : 'Confirm Debloat'}
+        </AlertDialog.Title>
         <AlertDialog.Description>
-          Are you sure you want to uninstall {apps.filter(a => a.selected && a.enabled).length} selected package(s) from {device?.name || 'your device'}? This will disable them for user 0.
+          {#if confirmAction === 'one-click'}
+            This will uninstall {apps.filter(a => a.selected && a.enabled).length} selected apps and install the Detox Chromium APK on {device?.name || 'your device'} in one click.
+          {:else}
+            Are you sure you want to uninstall {apps.filter(a => a.selected && a.enabled).length} selected package(s) from {device?.name || 'your device'}? This will disable them for user 0.
+          {/if}
         </AlertDialog.Description>
       </AlertDialog.Header>
       <AlertDialog.Footer>
-        <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-        <AlertDialog.Action onclick={executeDebloat}>Confirm</AlertDialog.Action>
+        <AlertDialog.Cancel onclick={() => confirmAction = null}>Cancel</AlertDialog.Cancel>
+        <AlertDialog.Action onclick={() => {
+          if (confirmAction === 'one-click') {
+            executeOneClickDetox();
+          } else {
+            executeDebloat();
+          }
+        }}>
+          Confirm
+        </AlertDialog.Action>
       </AlertDialog.Footer>
     </AlertDialog.Content>
   </AlertDialog.Root>
